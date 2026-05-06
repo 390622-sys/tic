@@ -64,6 +64,18 @@ async function checkAuth() {
     }
 }
 
+const winningConditions = [
+    [0, 1, 2], // Top row
+    [3, 4, 5], // Middle row
+    [6, 7, 8], // Bottom row
+    [0, 3, 6], // Left column
+    [1, 4, 7], // Middle column
+    [2, 5, 8], // Right column
+    [0, 4, 8], // Diagonal 1
+    [2, 4, 6]  // Diagonal 2
+];
+
+
 // --- GAME LOGIC (CP03) ---
 
 let currentPlayer = 'X';
@@ -80,12 +92,56 @@ function handleCellClick(e) {
     if (boardState[cellIndex] !== "" || !gameActive) return;
 
     // Update state and UI
-    boardState[cellIndex] = currentPlayer;
-    clickedCell.innerText = currentPlayer;
+        boardState[cellIndex] = currentPlayer;
+        clickedCell.innerText = currentPlayer;
 
-    // Swap turns
-    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-    statusDisplay.innerText = `Player ${currentPlayer}'s Turn`;
+        // Swap turns
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        statusDisplay.innerText = `Player ${currentPlayer}'s Turn`;
+
+        // ADD THIS LINE:
+        checkResult(); 
+
+    function restartGame() {
+        currentPlayer = "X";
+        gameActive = true;
+        boardState = ["", "", "", "", "", "", "", "", ""];
+        statusDisplay.innerText = "Player X's Turn";
+        document.querySelectorAll('.cell').forEach(cell => cell.innerText = "");
+    }
+
+    document.getElementById('reset-btn').addEventListener('click', restartGame);
+    }
+
+function checkResult() {
+    let roundWon = false;
+
+    for (let i = 0; i < winningConditions.length; i++) {
+        const [a, b, c] = winningConditions[i];
+        if (boardState[a] === "" || boardState[b] === "" || boardState[c] === "") {
+            continue;
+        }
+        if (boardState[a] === boardState[b] && boardState[b] === boardState[c]) {
+            roundWon = true;
+            break;
+        }
+    }
+
+    if (roundWon) {
+        // We have a winner!
+        // Swap back to the player who actually made the winning move for the announcement
+        const winner = currentPlayer === "X" ? "O" : "X"; 
+        statusDisplay.innerText = `Player ${winner} Wins!`;
+        gameActive = false;
+        return;
+    }
+
+    // Check for a Draw
+    if (!boardState.includes("")) {
+        statusDisplay.innerText = "It's a Draw!";
+        gameActive = false;
+        return;
+    }
 }
 
 // Initialize Cell Listeners
