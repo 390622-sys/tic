@@ -37,12 +37,14 @@ app.post("/register", (req, res) => {
     if (users.find((u) => u.username === username)) {
         return res.status(400).json({ message: "Username is already taken!" });
     }
-    // This is inside your app.post("/register")
     users.push({ 
         username, 
         password, 
-        stats: { wins: 0, losses: 0, draws: 0 } // Add this line!
-    
+        stats: { wins: 0, losses: 0, draws: 0 }
+    });
+    saveUsers(users);
+    req.session.user = username;
+    res.json({ message: "Registration successful! You are logged in." });
 });
 
 app.post("/login", (req, res) => {
