@@ -10,5 +10,14 @@
   {
     "username": "theboss",
     "password": "1234"
+  },
+  {
+    "username": "Angel12 ",
+    "password": "12345",
+    "stats": {
+      "wins": 0,
+      "losses": 0,
+      "draws": 0
+    }
   }
 ]
