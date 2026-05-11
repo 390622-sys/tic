@@ -37,10 +37,12 @@ app.post("/register", (req, res) => {
     if (users.find((u) => u.username === username)) {
         return res.status(400).json({ message: "Username is already taken!" });
     }
-    users.push({ username, password });
-    saveUsers(users);
-    req.session.user = username;
-    res.json({ message: "Registration successful! You are logged in." });
+    // This is inside your app.post("/register")
+    users.push({ 
+        username, 
+        password, 
+        stats: { wins: 0, losses: 0, draws: 0 } // Add this line!
+    
 });
 
 app.post("/login", (req, res) => {
@@ -76,7 +78,25 @@ app.get("/me", (req, res) => {
         res.json({ loggedIn: false });
     }
 });
+    app.post("/update-stats", (req, res) => {
+        // 1. Check if the user is actually logged in
+        if (!req.session.user) return res.status(401).send("Log in first!");
 
+        const { result } = req.body; // This will be 'win', 'loss', or 'draw'
+        const users = getUsers();
+        const user = users.find(u => u.username === req.session.user);
+
+        if (user) {
+            // 2. Add 1 point to the correct category
+            if (result === 'win') user.stats.wins++;
+            if (result === 'loss') user.stats.losses++;
+            if (result === 'draw') user.stats.draws++;
+
+            // 3. Save the file so it's permanent
+            saveUsers(users);
+            res.json({ message: "Score updated!", stats: user.stats });
+        }
+    });
 app.listen(PORT, () => {
     console.log(`Server is running at http://localhost:${PORT}`);
 });

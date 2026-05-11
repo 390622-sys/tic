@@ -134,6 +134,13 @@ function checkResult() {
         statusDisplay.innerText = `Player ${winner} Wins!`;
         gameActive = false;
         return;
+        async function sendResultToServer(result) {
+            await fetch('/update-stats', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ result: result })
+            });
+        }
     }
 
     // Check for a Draw
@@ -152,3 +159,11 @@ document.querySelectorAll('.cell').forEach(cell =>
 // --- STARTUP ---
 // Run the auth check as soon as the script loads
 checkAuth();
+
+async function sendResultToServer(result) {
+    await fetch('/update-stats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ result: result })
+    });
+}
