@@ -40,14 +40,10 @@ async function checkAuth() {
     const data = await response.json();
 
     if (data.loggedIn) {
-        // 1. Show the game section (CP03)
         document.getElementById('game-section').style.display = 'block';
-
-        // 2. Hide the login/register forms
         document.getElementById('register-section').style.display = 'none';
         document.getElementById('login-section').style.display = 'none';
 
-        // 3. Add welcome message safely
         const welcomeDiv = document.createElement('div');
         welcomeDiv.id = "welcome-area";
         welcomeDiv.innerHTML = `
@@ -56,7 +52,6 @@ async function checkAuth() {
         `;
         document.body.prepend(welcomeDiv);
 
-        // 4. Handle Logout
         document.getElementById('logout-btn').addEventListener('click', async () => {
             await fetch('/logout', { method: 'POST' });
             location.reload();
@@ -64,63 +59,41 @@ async function checkAuth() {
     }
 }
 
+// --- GAME LOGIC (CP03 & CP04) ---
+
 const winningConditions = [
-    [0, 1, 2], // Top row
-    [3, 4, 5], // Middle row
-    [6, 7, 8], // Bottom row
-    [0, 3, 6], // Left column
-    [1, 4, 7], // Middle column
-    [2, 5, 8], // Right column
-    [0, 4, 8], // Diagonal 1
-    [2, 4, 6]  // Diagonal 2
+    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Cols
+    [0, 4, 8], [2, 4, 6]             // Diagonals
 ];
-
-
-// --- GAME LOGIC (CP03) ---
 
 let currentPlayer = 'X';
 let gameActive = true;
 let boardState = ["", "", "", "", "", "", "", "", ""];
-
 const statusDisplay = document.getElementById('status');
 
 function handleCellClick(e) {
     const clickedCell = e.target;
     const cellIndex = parseInt(clickedCell.getAttribute('data-index'));
 
-    // Only allow click if cell is empty and game is active
     if (boardState[cellIndex] !== "" || !gameActive) return;
 
-    // Update state and UI
-        boardState[cellIndex] = currentPlayer;
-        clickedCell.innerText = currentPlayer;
+    boardState[cellIndex] = currentPlayer;
+    clickedCell.innerText = currentPlayer;
 
-        // Swap turns
-        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-        statusDisplay.innerText = `Player ${currentPlayer}'s Turn`;
+    // Swap turns
+    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+    statusDisplay.innerText = `Player ${currentPlayer}'s Turn`;
 
-        // ADD THIS LINE:
-        checkResult(); 
-
-    function restartGame() {
-        currentPlayer = "X";
-        gameActive = true;
-        boardState = ["", "", "", "", "", "", "", "", ""];
-        statusDisplay.innerText = "Player X's Turn";
-        document.querySelectorAll('.cell').forEach(cell => cell.innerText = "");
-    }
-
-    document.getElementById('reset-btn').addEventListener('click', restartGame);
-    }
+    checkResult(); 
+}
 
 function checkResult() {
     let roundWon = false;
 
     for (let i = 0; i < winningConditions.length; i++) {
         const [a, b, c] = winningConditions[i];
-        if (boardState[a] === "" || boardState[b] === "" || boardState[c] === "") {
-            continue;
-        }
+        if (boardState[a] === "" || boardState[b] === "" || boardState[c] === "") continue;
         if (boardState[a] === boardState[b] && boardState[b] === boardState[c]) {
             roundWon = true;
             break;
@@ -128,37 +101,38 @@ function checkResult() {
     }
 
     if (roundWon) {
-        // We have a winner!
-        // Swap back to the player who actually made the winning move for the announcement
         const winner = currentPlayer === "X" ? "O" : "X"; 
         statusDisplay.innerText = `Player ${winner} Wins!`;
         gameActive = false;
-        return;
-        async function sendResultToServer(result) {
-            await fetch('/update-stats', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ result: result })
-            });
+
+        // --- CP05: SEND WIN/LOSS TO SERVER ---
+        if (winner === 'X') {
+            sendResultToServer('win');
+        } else {
+            sendResultToServer('loss');
         }
+        return;
     }
 
-    // Check for a Draw
     if (!boardState.includes("")) {
         statusDisplay.innerText = "It's a Draw!";
         gameActive = false;
+
+        // --- CP05: SEND DRAW TO SERVER ---
+        sendResultToServer('draw');
         return;
     }
 }
 
-// Initialize Cell Listeners
-document.querySelectorAll('.cell').forEach(cell => 
-    cell.addEventListener('click', handleCellClick)
-);
+function restartGame() {
+    currentPlayer = "X";
+    gameActive = true;
+    boardState = ["", "", "", "", "", "", "", "", ""];
+    statusDisplay.innerText = "Player X's Turn";
+    document.querySelectorAll('.cell').forEach(cell => cell.innerText = "");
+}
 
-// --- STARTUP ---
-// Run the auth check as soon as the script loads
-checkAuth();
+// --- CP05: STATS LOGIC ---
 
 async function sendResultToServer(result) {
     await fetch('/update-stats', {
@@ -167,3 +141,13 @@ async function sendResultToServer(result) {
         body: JSON.stringify({ result: result })
     });
 }
+
+// --- INITIALIZATION ---
+
+document.getElementById('reset-btn').addEventListener('click', restartGame);
+
+document.querySelectorAll('.cell').forEach(cell => 
+    cell.addEventListener('click', handleCellClick)
+);
+
+checkAuth();

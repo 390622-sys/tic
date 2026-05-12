@@ -19,5 +19,32 @@
       "losses": 0,
       "draws": 0
     }
+  },
+  {
+    "username": "Angel1",
+    "password": "123",
+    "stats": {
+      "wins": 0,
+      "losses": 0,
+      "draws": 0
+    }
+  },
+  {
+    "username": "test check5",
+    "password": "123",
+    "stats": {
+      "wins": 0,
+      "losses": 0,
+      "draws": 0
+    }
+  },
+  {
+    "username": "test1",
+    "password": "12",
+    "stats": {
+      "wins": 1,
+      "losses": 0,
+      "draws": 2
+    }
   }
 ]
